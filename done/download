@@ -25,14 +25,14 @@ def download_data(start_date, end_date, instrument, wavelength, no_sampling, sam
     
     if not no_sampling:
         sampling_time = int(sampling_time) * u.min
-        if Instrument == 'aia':
+        if instrument == 'aia':
             result = Fido.search(a.Time(start_date, end_date), a.Instrument.aia,
                                  a.Sample(sampling_time), a.Wavelength(wavelength*u.angstrom))
         else:
             result = Fido.search(a.Time(start_date, end_date), a.Instrument.hmi,
                                  a.Sample(sampling_time), a.Physobs.los_magnetic_field)
     else:
-        if Instrument == 'aia':
+        if instrument == 'aia':
             result = Fido.search(a.Time(start_date, end_date), a.Instrument.aia,
                                  a.Wavelength(wavelength*u.angstrom))
         else:
@@ -52,6 +52,8 @@ if __name__=="__main__":
 
     parser.add_argument('-s', "--no_sampling", action="store_true",
                         help="if sampling is not to be provided")
+    parser.add_argument('-i', "--instrument", nargs='?', default='aia', const='aia',
+                        help="instrument name to download data from")
     args = parser.parse_args()
 
     dates = [
@@ -76,8 +78,8 @@ if __name__=="__main__":
 
     date = convert_date(date)
 
-    start_time = input("start time (hh:mm)")
-    end_time = input("end time (hh:mm)")
+    start_time = input("enter start time (hh:mm): ")
+    end_time = input("enter end time (hh:mm): ")
 
     start_date = date + ' ' + start_time
     end_date = date + ' ' + end_time
@@ -96,4 +98,4 @@ if __name__=="__main__":
         if sampling_time == 'default':
             no_sampling = True
 
-    download_data(start_date, end_date, instrument, wavelength, no_sampling, sampling_time)
+    download_data(start_date, end_date, args.instrument, wavelength, args.no_sampling, sampling_time)
