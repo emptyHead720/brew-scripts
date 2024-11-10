@@ -1,0 +1,105 @@
+#!/home/snehil/miniforge3/envs/data-work/bin/python
+
+import subprocess as sp
+from sunpy.net import Fido, attrs as a
+import astropy.units as u
+import sunpy.map
+import sunpy.data.sample
+import matplotlib.pyplot as plt
+import matplotlib.colors
+import argparse
+from glob import glob
+from astropy.coordinates import SkyCoord
+from astropy.visualization import ImageNormalize, SqrtStretch
+
+
+def plot(files):
+
+    sequence = sunpy.map.Map(files, sequence=True)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection=sequence.maps[0])
+    # ani = sequence.plot(axes=ax, cmap="hmimag", norm=plt.Normalize(-1500, 1500))
+    ani = sequence.plot(axes=ax, clip_interval=(1, 99.5)*u.percent) # clip & norm read
+    # ani.save(f'./{args.plot}/animation/ani.mp4')
+    plt.show()
+
+if __name__=="__main__":
+    parser = argparse.ArgumentParser()
+
+    group = parser.add_mutually_exclusive_group()
+
+    parser.add_argument('-p', "--path", nargs='?', default='.', const='.',
+                        help="path to files' directory") 
+    parser.add_argument('-d', "--dense", action='count', default=0, 
+                        help='density of file to be used')
+    parser.add_argument('-c', "--choice", action='store_true', help="to choose two files to plot between")
+    # parser.add_argument('-t', "--time", action='store_true', help="give two time inputs")
+    
+    # make -d and -c mutually exclusive
+
+    args = parser.parse_args()
+    
+    # files = glob(f"{args.path}/*.fits")
+    files = glob("./*.fits")
+    
+    # see if sorting set would be faster
+    # sets are not ordered so useless for this code
+    files.sort()
+
+    if args.choice:
+        # have selection work with multi select
+        # try to not use shell = True
+        file1 = sp.run('find . -type f -name "*.fits" |fzf',
+                        shell=True, capture_output=True, text=True)
+
+        file2 = sp.run('find . -type f -name "*.fits" |fzf',
+                        shell=True, capture_output=True, text=True)
+
+        # file1 = sp.run('readlink -f $(find . -type f -name "*.fits" |fzf)',
+        #                 shell=True, capture_output=True, text=True)
+
+        # file2 = sp.run('readlink -f $(find . -type f -name "*.fits" |fzf)',
+        #                 shell=True, capture_output=True, text=True)
+
+        if (file1.stderr.split('\n', 1)[0] == 'readlink: missing operand' or
+        file2.stderr.split('\n', 1)[0] == 'readlink: missing operand'):
+            print('Either start or end file wasn\'t selected')
+            import sys; sys.exit(0)
+
+        file1 = file1.stdout.strip()
+        file2 = file2.stdout.strip()
+
+        file1_index = files.index(file1)
+        file2_index = files.index(file2)
+
+        if file1_index > file2_index:
+            # dont use this if multidimensional array or if second element depend on first
+           file1_index, file2_index = file2_index, file1_index
+           print("order of files chosen was swapped")
+
+        files = files[file1_index:file2_index]
+
+    length = len(files)
+
+    if args.dense == 0:
+        if length > 25:
+            plot(files[::length//25])
+        else:
+            plot(files)
+
+    elif args.dense == 1:
+        if length > 50:
+            plot(files[::length//50])
+        else:
+            plot(files)
+
+    elif args.dense == 2:
+        if length > 100:
+            plot(files[::length//100])
+        else:
+            plot(files)
+
+    else:
+        print("will take too long")
+        # plot(files)
