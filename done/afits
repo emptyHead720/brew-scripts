@@ -62,6 +62,7 @@ if __name__=="__main__":
         # file2 = sp.run('readlink -f $(find . -type f -name "*.fits" |fzf)',
         #                 shell=True, capture_output=True, text=True)
 
+        # fix the error as readlink is not being used
         if (file1.stderr.split('\n', 1)[0] == 'readlink: missing operand' or
         file2.stderr.split('\n', 1)[0] == 'readlink: missing operand'):
             print('Either start or end file wasn\'t selected')
@@ -101,5 +102,5 @@ if __name__=="__main__":
             plot(files)
 
     else:
-        print("will take too long")
-        # plot(files)
+        # print("will take too long")
+        plot(files)
