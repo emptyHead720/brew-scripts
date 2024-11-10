@@ -39,12 +39,12 @@ def download_data(start_date, end_date, instrument, wavelength, no_sampling, sam
             result = Fido.search(a.Time(start_date, end_date), a.Instrument.hmi,
                                  a.Physobs.los_magnetic_field)
         
-        print(result)
+    print(result)
 
-        download = input("Do you want to downlaod the data (y/n): ")
-        if download == 'y':
-            print("Downloading...")
-            download = Fido.fetch(result, path='./data/{file}')
+    download = input("Do you want to downlaod the data (y/n): ")
+    if download == 'y':
+        print("Downloading...")
+        download = Fido.fetch(result, path='./data/{file}')
 
 
 if __name__=="__main__":
@@ -91,7 +91,7 @@ if __name__=="__main__":
     process = sp.Popen(['fzf | awk \'{print $1}\''], shell=True, stdout=sp.PIPE,
                     stdin=sp.PIPE, stderr=sp.STDOUT)    
     wavelength = process.communicate(input='\n'.join(allowed_wavelengths).encode())[0].decode()
-    wavelength = wavelength.strip()
+    wavelength = int(wavelength.strip())
 
     if not args.no_sampling:
         sampling_time = input("Enter sampling time in minutes or 'default': ")
