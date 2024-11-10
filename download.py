@@ -1,3 +1,4 @@
+import subprocess as sp
 import os
 from sunpy.net import Fido, attrs as a
 import astropy.units as u
@@ -10,71 +11,39 @@ from glob import glob
 from astropy.coordinates import SkyCoord
 from astropy.visualization import ImageNormalize, SqrtStretch
 
+def convert_date(date):
+    months = {'jan':'01', 'feb':'02', 'mar':'03', 'apr':'04', 'may':'05', 'jun':'06', 'jul':'07',
+              'aug':'08', 'sep':'09', 'oct':'10', 'nov':'11', 'dec':'12'}
+    tmp = date.split('-')
+    date = tmp[2] + '/' + months[tmp[0]] + '/' + tmp[1]
+    return(date)
 
-def access_data(download):
+def access_data(start_date, end_date, instrument, wavelength, no_sampling, sampling_time ):
     print("Searching...")
-    start_date = "2023/12/30"
-    end_date = "2023/12/31"
-    sampling_time = 15*u.min
-
-    Instrument = 'aia'
     
-    if Instrument == 'aia':
-        result = Fido.search(a.Time(start_date, end_date), a.Instrument.aia,
-                             a.Sample(sampling_time), a.Wavelength(171*u.angstrom))
+    if not no_sampling:
+        sampling_time = int(sampling_time) * u.min
+        if Instrument == 'aia':
+            result = Fido.search(a.Time(start_date, end_date), a.Instrument.aia,
+                                 a.Sample(sampling_time), a.Wavelength(wavelength*u.angstrom))
+        else:
+            result = Fido.search(a.Time(start_date, end_date), a.Instrument.hmi,
+                                 a.Sample(sampling_time), a.Physobs.los_magnetic_field)
     else:
-        result = Fido.search(a.Time(start_date, end_date), a.Instrument.hmi,
-                             a.Sample(sampling_time), a.Physobs.los_magnetic_field)
-    
-    if download:
-        print("Downloading...")
-        download = Fido.fetch(result, path='./data/{file}')
-    else:
+        if Instrument == 'aia':
+            result = Fido.search(a.Time(start_date, end_date), a.Instrument.aia,
+                                 a.Wavelength(wavelength*u.angstrom))
+        else:
+            result = Fido.search(a.Time(start_date, end_date), a.Instrument.hmi,
+                                 a.Physobs.los_magnetic_field)
+        
         print(result)
 
-def cropped():
-    start_date = "2023/12/31 20:55"
-    end_date = "2024/01/01 01:55"
-    
-    bottom_left_x = -1200
-    bottom_left_y = -500
-    top_right_x = -700
-    top_right_y = 400
-    bottom_left = SkyCoord(bottom_left_x*u.arcsec, bottom_left_y*u.arcsec,
-                               obstime=start_date, observer="earth",
-                               frame="helioprojective")
-    top_right = SkyCoord(top_right_x*u.arcsec, top_right_y*u.arcsec,
-                             obstime=start_date, observer="earth",
-                             frame="helioprojective")
-    cutout = a.jsoc.Cutout(bottom_left, top_right=top_right, tracking=True)
+        download = input("Do you want to downlaod the data (y/n): ")
+        if download == 'y':
+            print("Downloading...")
+            download = Fido.fetch(result, path='./data/{file}')
 
-    jsoc_email = "pandey.snehil720@gmail.com"
-    
-    result = Fido.search(a.Time(start_date, end_date), a.Wavelength(171*u.angstrom),
-                         a.jsoc.Series.aia_lev1_euv_12s, a.jsoc.Notify(jsoc_email),
-                         cutout)
-
-    download = Fido.fetch(result, path='./cropped/{file}')
-    # print(result)
-    # sub_seq = []
-    # top_right_x = -800
-    # top_right_y = 400
-    # for i in range(len(files)):
-    #     roi_bottom_left = SkyCoord(Tx=bottom_left_x*u.arcsec, Ty=bottom_left_y*u.arcsec,
-    #                                frame=sequence.maps[i].coordinate_frame)
-    #     roi_top_right = SkyCoord(Tx=top_right_x*u.arcsec, Ty=top_right_y*u.arcsec,
-    #                              frame=sequence.maps[i].coordinate_frame)
-    #     item = sequence.maps[i].submap(roi_bottom_left, top_right=roi_top_right)
-    #     sub_seq.append(item)
-    # sub_seq = sunpy.map.Map(sub_seq, sequence=True)
-
-    # fig = plt.figure()
-    # ax = fig.add_subplot(projection=sub_seq.maps[0])
-    # ani = sub_seq.plot(axes=ax, clip_interval=(1, 99.5)*u.percent)
-    #                     # norm=ImageNormalize(vmin=0, vmax=5e3, stretch=SqrtStretch()))
-    # plt.colorbar()
-    # ani.save('./cropped-ani.mp4')
-    # plt.show()
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
@@ -83,18 +52,45 @@ if __name__=="__main__":
                         help="if sampling is not to be provided")
     args = parser.parse_args()
 
-    start_date = input("start date-time (yyyy/mm/dd hh:mm)")
-    end_date = input("end date-time (yyyy/mm/dd hh:mm)")
+    dates = [
+            'dec-30-2023',
+            'add_new_date'
+            ]
+
+    process = Popen(['fzf'], stdout=PIPE, stdin=PIPE, stderr=STDOUT)    
+    date = p.communicate(input='\n'.join(dates).encode())[0].decode().strip()
+
+
+    if write == 'y':
+        date = input("enter date (mth-dd-yyyy): ")
+        with open(__file__, 'r') as file:
+            filedata = file.read()
+    
+        filedata = filedata.replace('\'add_new_date\'', '\'' + date + '\',' +
+                                    '\n    \'add_new_date\'')
+    
+        with open(__file__, 'w') as file:
+            file.write(filedata)
+
+    date = convert(date)
+
+    start_time = input("start time (hh:mm)")
+    end_time = input("end time (hh:mm)")
+
+    start_date = date + ' ' + start_time
+    end_date = date + ' ' + end_time
 
     allowed_wavelengths = ['171 (gold)', '193 (bronze)', '304 (red)', '211 (purple)',
                            '131 (teal)', '335 (blue)', '094 (green)', '1600 (yellow/green)',
                            '1700 (pink)']
 
-    wavelength = sp.run('find . -type f -name "*.fits" |fzf',
-                    shell=True, capture_output=True, text=True)
+    process = Popen(['fzf | awk \'{print $1}\''], shell=True, stdout=PIPE,
+                    stdin=PIPE, stderr=STDOUT)    
+    wavelength = process.communicate(input='\n'.join(allowed_wavelengths).encode())[0].decode()
+    wavelength = wavelength.strip()
+
     if not args.no_sampling:
-        sampling_time = input("Enter sampling time ( #h|m|s )")
-
-    
-
+        sampling_time = input("Enter sampling time in minutes or 'default': ")
+        if samplint_time = 'default':
+            no_sampling = True
 
