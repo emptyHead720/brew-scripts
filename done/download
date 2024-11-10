@@ -1,3 +1,5 @@
+#!/home/snehil/miniforge3/envs/data-work/bin/python
+
 import subprocess as sp
 import os
 from sunpy.net import Fido, attrs as a
@@ -18,7 +20,7 @@ def convert_date(date):
     date = tmp[2] + '/' + months[tmp[0]] + '/' + tmp[1]
     return(date)
 
-def access_data(start_date, end_date, instrument, wavelength, no_sampling, sampling_time ):
+def download_data(start_date, end_date, instrument, wavelength, no_sampling, sampling_time):
     print("Searching...")
     
     if not no_sampling:
@@ -57,11 +59,11 @@ if __name__=="__main__":
             'add_new_date'
             ]
 
-    process = Popen(['fzf'], stdout=PIPE, stdin=PIPE, stderr=STDOUT)    
-    date = p.communicate(input='\n'.join(dates).encode())[0].decode().strip()
+    process = sp.Popen(['fzf'], stdout=sp.PIPE, stdin=sp.PIPE, stderr=sp.STDOUT)    
+    date = process.communicate(input='\n'.join(dates).encode())[0].decode().strip()
 
 
-    if write == 'y':
+    if date == 'add_new_date':
         date = input("enter date (mth-dd-yyyy): ")
         with open(__file__, 'r') as file:
             filedata = file.read()
@@ -72,7 +74,7 @@ if __name__=="__main__":
         with open(__file__, 'w') as file:
             file.write(filedata)
 
-    date = convert(date)
+    date = convert_date(date)
 
     start_time = input("start time (hh:mm)")
     end_time = input("end time (hh:mm)")
@@ -84,13 +86,14 @@ if __name__=="__main__":
                            '131 (teal)', '335 (blue)', '094 (green)', '1600 (yellow/green)',
                            '1700 (pink)']
 
-    process = Popen(['fzf | awk \'{print $1}\''], shell=True, stdout=PIPE,
-                    stdin=PIPE, stderr=STDOUT)    
+    process = sp.Popen(['fzf | awk \'{print $1}\''], shell=True, stdout=sp.PIPE,
+                    stdin=sp.PIPE, stderr=sp.STDOUT)    
     wavelength = process.communicate(input='\n'.join(allowed_wavelengths).encode())[0].decode()
     wavelength = wavelength.strip()
 
     if not args.no_sampling:
         sampling_time = input("Enter sampling time in minutes or 'default': ")
-        if samplint_time = 'default':
+        if sampling_time == 'default':
             no_sampling = True
 
+    download_data(start_date, end_date, instrument, wavelength, no_sampling, sampling_time)
