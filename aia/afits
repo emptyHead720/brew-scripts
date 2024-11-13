@@ -77,14 +77,13 @@ if __name__=="__main__":
 
     args = parser.parse_args()
     
-    # files = glob(f"{args.path}/*.fits")
     files = glob("./*.fits")
     
-    # see if sorting set would be faster
-    # sets are not ordered so useless for this code
+    # see if sorting set would be faster # sets are not ordered so useless for this code
     files.sort()
 
     if args.choice:
+        sub_select_files(files)
 
     length = len(files)
 
