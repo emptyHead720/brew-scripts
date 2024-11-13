@@ -22,11 +22,11 @@ if __name__=="__main__":
                         help="path to file") 
     args = parser.parse_args()
     
-    # files = glob(f"{args.path}")
+    files = glob(f"{args.path}")
      
-    # file = os.popen('readlink -f $(fzf)').read().strip()
+    file = os.popen('readlink -f $(fzf)').read().strip()
 
-    # file = os.popen('readlink -f $(fzf)').communicate()
+    file = os.popen('readlink -f $(fzf)').communicate()
 
     output = sp.run('readlink -f $(find . -type f -name "*.fits" |fzf)',
                     shell=True, capture_output=True, text=True)
@@ -39,10 +39,16 @@ if __name__=="__main__":
     file = output.stdout.strip()
     map = sunpy.map.Map(file)
 
-    fig, ax1 = plt.subplots(nrows=1, ncols=1, subplot_kw={'projection':map, })
+    fig, ax = plt.subplots(nrows=2, ncols=4, constrained_layout=True,
+                                   subplot_kw={'projection':map,'projection':map })
 
-    map.plot(axes=ax1, clip_interval=(1, 99.5)*u.percent) # , norm=matplotlib.colors.LogNorm()
+    for axe in ax:
+        for axes in axe:
+            map.plot(axes=axes, clip_interval=(1, 99.5)*u.percent) # , norm=matplotlib.colors.LogNorm()
+            plt.axis('off')
+
 
     # map.draw_contours([1,5,10,50,90]*u.percent)
-    plt.colorbar() # need to fix how to have global colorbar and not only on the last
+    # plt.colorbar() # need to fix how to have global colorbar and not only on the last
+
     plt.show()
