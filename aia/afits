@@ -14,7 +14,6 @@ from astropy.visualization import ImageNormalize, SqrtStretch
 
 
 def plot(files):
-
     sequence = sunpy.map.Map(files, sequence=True)
 
     fig = plt.figure()
@@ -23,6 +22,44 @@ def plot(files):
     ani = sequence.plot(axes=ax, clip_interval=(1, 99.5)*u.percent) # clip & norm read
     # ani.save(f'./{args.plot}/animation/ani.mp4')
     plt.show()
+
+
+def sub_select_files(files)
+    # have selection work with multi select in one fzf window itself
+    # try to not use shell = True
+    file1 = sp.run('find . -type f -name "*.fits" |fzf',
+                    shell=True, capture_output=True, text=True)
+
+    file2 = sp.run('find . -type f -name "*.fits" |fzf',
+                    shell=True, capture_output=True, text=True)
+
+    # file1 = sp.run('readlink -f $(find . -type f -name "*.fits" |fzf)',
+    #                 shell=True, capture_output=True, text=True)
+
+    # file2 = sp.run('readlink -f $(find . -type f -name "*.fits" |fzf)',
+    #                 shell=True, capture_output=True, text=True)
+
+    # fix the error as readlink is not being used
+    if (file1.stderr.split('\n', 1)[0] == 'readlink: missing operand' or
+    file2.stderr.split('\n', 1)[0] == 'readlink: missing operand'):
+        print('Either start or end file wasn\'t selected')
+        import sys; sys.exit(0)
+
+    file1 = file1.stdout.strip()
+    file2 = file2.stdout.strip()
+
+    file1_index = files.index(file1)
+    file2_index = files.index(file2)
+
+    if file1_index > file2_index:
+        # dont use this if multidimensional array or if second element depend on first
+        file1_index, file2_index = file2_index, file1_index
+        print("order of files chosen was swapped")
+
+    files = files[file1_index:file2_index]
+
+    return(files)
+
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
@@ -48,38 +85,6 @@ if __name__=="__main__":
     files.sort()
 
     if args.choice:
-        # have selection work with multi select
-        # try to not use shell = True
-        file1 = sp.run('find . -type f -name "*.fits" |fzf',
-                        shell=True, capture_output=True, text=True)
-
-        file2 = sp.run('find . -type f -name "*.fits" |fzf',
-                        shell=True, capture_output=True, text=True)
-
-        # file1 = sp.run('readlink -f $(find . -type f -name "*.fits" |fzf)',
-        #                 shell=True, capture_output=True, text=True)
-
-        # file2 = sp.run('readlink -f $(find . -type f -name "*.fits" |fzf)',
-        #                 shell=True, capture_output=True, text=True)
-
-        # fix the error as readlink is not being used
-        if (file1.stderr.split('\n', 1)[0] == 'readlink: missing operand' or
-        file2.stderr.split('\n', 1)[0] == 'readlink: missing operand'):
-            print('Either start or end file wasn\'t selected')
-            import sys; sys.exit(0)
-
-        file1 = file1.stdout.strip()
-        file2 = file2.stdout.strip()
-
-        file1_index = files.index(file1)
-        file2_index = files.index(file2)
-
-        if file1_index > file2_index:
-            # dont use this if multidimensional array or if second element depend on first
-           file1_index, file2_index = file2_index, file1_index
-           print("order of files chosen was swapped")
-
-        files = files[file1_index:file2_index]
 
     length = len(files)
 
