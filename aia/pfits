@@ -24,10 +24,6 @@ if __name__=="__main__":
     
     files = glob(f"{args.path}")
      
-    file = os.popen('readlink -f $(fzf)').read().strip()
-
-    file = os.popen('readlink -f $(fzf)').communicate()
-
     output = sp.run('readlink -f $(find . -type f -name "*.fits" |fzf)',
                     shell=True, capture_output=True, text=True)
 
