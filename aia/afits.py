@@ -176,7 +176,7 @@ def src_plot(sequence, axes=None, resample=None, annotate=True, interval=200,
     return ani
 
 
-def plot(files):
+def plot(files, dir_back):
     sequence = sunpy.map.Map(files, sequence=True)
 
     fig = plt.figure()
@@ -205,8 +205,8 @@ def plot(files):
     plt.show(block=False)
     save = input("want to save file?(y/n) : ")
     if save == 'y':
-        filename = input("enter file name")
-        ani.save(f'./../animations/{filename}.mp4')
+        filename = input("enter file name: ")
+        ani.save(f'./{dir_back*"../"}animations/{filename}.mp4')
 
 def sub_select_files(files):
     # have selection work with multi select in one fzf window itself
@@ -245,25 +245,25 @@ def sub_select_files(files):
     return(files)
 
 
-def plot_on_dense(files, dense):
+def plot_on_dense(files, dense, dir_back):
     length = len(files)
     if dense == 0:
         if length > 25:
-            plot(files[::length//25])
+            plot(files[::length//25], dir_back)
         else:
-            plot(files)
+            plot(files, dir_back)
 
     elif dense == 1:
         if length > 50:
-            plot(files[::length//50])
+            plot(files[::length//50], dir_back)
         else:
-            plot(files)
+            plot(files, dir_back)
 
     elif dense == 2:
         if length > 100:
-            plot(files[::length//100])
+            plot(files[::length//100], dir_back)
         else:
-            plot(files)
+            plot(files, dir_back)
             
 
 def main():
@@ -285,6 +285,7 @@ def main():
     args = parser.parse_args()
     
     files = glob("./*.fits")
+    dir_back = True
     
     if not files:
         process = sp.Popen(['ls | fzf'], shell=True, stdout=sp.PIPE,
@@ -293,6 +294,7 @@ def main():
         wavelength = wavelength.strip()
 
         files = glob(f'./{wavelength}/*.fits')
+        dir_back = False
     # fig, ax = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
     #                                subplot_kw={'projection':sequence.maps[1]})
     
@@ -309,14 +311,14 @@ def main():
     files.sort()
     
     if args.choice:
-        files = sub_select_files(files)
+        files = sub_select_files(files, dir_back)
 
     if args.dense > 2:
         # print("will take too long")
-        plot(files)
+        plot(files, dir_back)
 
     else:
-        plot_on_dense(files, args.dense)
+        plot_on_dense(files, args.dense, dir_back)
 
 
 if __name__=="__main__":
