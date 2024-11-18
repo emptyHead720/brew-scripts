@@ -311,7 +311,7 @@ def main():
     files.sort()
     
     if args.choice:
-        files = sub_select_files(files, dir_back)
+        files = sub_select_files(files)
 
     if args.dense > 2:
         # print("will take too long")
