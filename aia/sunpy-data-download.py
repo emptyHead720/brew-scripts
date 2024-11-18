@@ -24,21 +24,22 @@ def download_data(start_date, end_date, instrument, wavelength_arr, no_sampling,
                   sampling_time, download):
     for wavelength in wavelength_arr:
         print("Searching...")
-
         if not no_sampling:
             if instrument == 'aia':
                 result = Fido.search(a.Time(start_date, end_date), a.Instrument.aia,
-                                    a.Sample(sampling_time), a.Wavelength(wavelength*u.angstrom))
+                                    a.Sample(sampling_time),
+                                     a.Wavelength(wavelength*u.angstrom), a.Resolution(1))
             else:
                 result = Fido.search(a.Time(start_date, end_date), a.Instrument.hmi,
-                                    a.Sample(sampling_time), a.Physobs.los_magnetic_field)
+                                     a.Sample(sampling_time),
+                                     a.Physobs.los_magnetic_field, a.Resolution(1))
         else:
             if instrument == 'aia':
                 result = Fido.search(a.Time(start_date, end_date), a.Instrument.aia,
-                                    a.Wavelength(wavelength*u.angstrom))
+                                    a.Wavelength(wavelength*u.angstrom), a.Resolution(1))
             else:
                 result = Fido.search(a.Time(start_date, end_date), a.Instrument.hmi,
-                                    a.Physobs.los_magnetic_field)
+                                    a.Physobs.los_magnetic_field, a.Resolution(1))
          
         print(result)
         if not download:
@@ -95,7 +96,7 @@ if __name__=="__main__":
 
     allowed_wavelengths = ['171 (gold)', '193 (bronze)', '304 (red)', '211 (purple)',
                            '131 (teal)', '335 (blue)', '094 (green)', '1600 (yellow/green)',
-                           '1700 (pink)']
+                           '1700 (pink)', 'hmi']
 
     process = sp.Popen(['fzf -m | awk \'{print $1}\''], shell=True, stdout=sp.PIPE,
                     stdin=sp.PIPE, stderr=sp.STDOUT)    
