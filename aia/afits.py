@@ -180,22 +180,20 @@ def plot(files):
     sequence = sunpy.map.Map(files, sequence=True)
 
     fig = plt.figure()
-    # axes = fig.add_subplot(projection=sequence.maps[0])
+    ax = fig.add_subplot(projection=sequence.maps[0])
     # ani = sequence.plot(axes=ax, clip_interval=(1, 99.5)*u.percent) # clip & norm read
 
     # kw passed to all subplots, passing different read loosely that was impossible and
     # thus see if ever need to pass different, especially when plotting different
     # wavelengths and said you might need to create your own wrapper.
 
-    fig, ax = plt.subplots(nrows=2, ncols=3, constrained_layout=True,
-                                   subplot_kw={'projection':sequence.maps[0]})
+    # fig, ax = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+    #                                subplot_kw={'projection':sequence.maps[0]})
 
     # print(f'{axes = }\n{ax = }\n{type(axes) = }\n{type(ax) = }\n{ax[0][0] = }\n{type(ax[0][0]) = }')
     # ani = sequence.plot(axes=ax[0][0], clip_interval=(1, 99.5)*u.percent) # , norm=matplotlib.colors.LogNorm()
-    for axe in ax:
-        for axes in axe:
-            ani = sequence.plot(axes=axes, clip_interval=(1, 99.5)*u.percent) # , norm=matplotlib.colors.LogNorm()
-            plt.axis('off')
+    ani = sequence.plot(axes=ax, clip_interval=(1, 99.5)*u.percent) # , norm=matplotlib.colors.LogNorm()
+    # plt.axis('off')
 
     # ani = sequence.plot(axes=ax[0][0], clip_interval=(1, 99.5)*u.percent) # , norm=matplotlib.colors.LogNorm()
  
@@ -203,8 +201,12 @@ def plot(files):
     # map.draw_contours([1,5,10,50,90]*u.percent)
     # plt.colorbar() # need to fix how to have global colorbar and not only on the last
 
-    plt.show()
-
+    # plt.ion()
+    plt.show(block=False)
+    save = input("want to save file?(y/n) : ")
+    if save == 'y':
+        filename = input("enter file name")
+        ani.save(f'./../animations/{filename}.mp4')
 
 def sub_select_files(files):
     # have selection work with multi select in one fzf window itself
@@ -243,7 +245,7 @@ def sub_select_files(files):
     return(files)
 
 
-def plot_on_choice(files, dense):
+def plot_on_dense(files, dense):
     length = len(files)
     if dense == 0:
         if length > 25:
@@ -283,23 +285,18 @@ def main():
     args = parser.parse_args()
     
     files = glob("./*.fits")
-    sequence = sunpy.map.Map(files, sequence=True)
 
-    sequence_list = [sequence] * 6
-    
-    fig, ax = plt.subplots(nrows=2, ncols=3, constrained_layout=True,
-                                   subplot_kw={'projection':sequence.maps[1]})
+    # fig, ax = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+    #                                subplot_kw={'projection':sequence.maps[1]})
     
     # im = sequence[0].plot(axes=ax.ravel()[0])
     # im = sequence[1].plot(axes=tt.ravel()[0])
 
-    # sequence_listgcc
-    ani = custom_plot(sequence_list=sequence_list, axes=ax.ravel()) # clip & norm read
+    # ani = custom_plot(sequence_list=sequence_list, axes=ax.ravel()) # clip & norm read
+
     # ani.save('./ani.mp4')
     # ani = src_plot(sequence=sequence, axes=axes, clip_interval=(1, 99.5)*u.percent)
 
-    plt.show()
-    import sys; sys.exit(0)
 
     # see if sorting set would be faster # sets are not ordered so useless for this code
     files.sort()
@@ -312,7 +309,7 @@ def main():
         plot(files)
 
     else:
-        plot_on_choice(files, args.dense)
+        plot_on_dense(files, args.dense)
 
 
 if __name__=="__main__":
