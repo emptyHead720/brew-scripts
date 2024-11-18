@@ -285,7 +285,14 @@ def main():
     args = parser.parse_args()
     
     files = glob("./*.fits")
+    
+    if not files:
+        process = sp.Popen(['ls | fzf'], shell=True, stdout=sp.PIPE,
+                        stdin=sp.PIPE, stderr=sp.STDOUT)    
+        wavelength = process.communicate()[0].decode()
+        wavelength = wavelength.strip()
 
+    files = glob(f'./{wavelength}/*.fits')
     # fig, ax = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
     #                                subplot_kw={'projection':sequence.maps[1]})
     
@@ -300,7 +307,7 @@ def main():
 
     # see if sorting set would be faster # sets are not ordered so useless for this code
     files.sort()
-
+    
     if args.choice:
         files = sub_select_files(files)
 
