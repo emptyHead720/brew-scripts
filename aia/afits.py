@@ -292,7 +292,7 @@ def main():
         wavelength = process.communicate()[0].decode()
         wavelength = wavelength.strip()
 
-    files = glob(f'./{wavelength}/*.fits')
+        files = glob(f'./{wavelength}/*.fits')
     # fig, ax = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
     #                                subplot_kw={'projection':sequence.maps[1]})
     
