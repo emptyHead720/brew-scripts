@@ -36,10 +36,10 @@ if __name__=="__main__":
 
 
     if not args.multi_plot:
-        fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
-                                       subplot_kw={'projection':map})
         file = output.stdout.strip()
         map = sunpy.map.Map(file)
+        fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                                       subplot_kw={'projection':map})
         map.plot(axes=axes, clip_interval=(1, 99.5)*u.percent) # , norm=matplotlib.colors.LogNorm()
 
     else:
