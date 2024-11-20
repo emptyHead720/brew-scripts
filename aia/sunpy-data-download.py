@@ -49,7 +49,7 @@ def download_data(start_date, end_date, instrument, iterable_arr, no_sampling,
                 if instrument == 'aia':
                     download_data = Fido.fetch(result, path=f'./{wavelength}' + '/{file}')
                 elif instrument == 'hmi':
-                    download_data = Fido.fetch(result, path=f'./{physobs}' + '/{file}')
+                    download_data = Fido.fetch(result, path=f'./{phy_obs}' + '/{file}')
                 print('\n\n\n')
 
         else:
@@ -57,7 +57,7 @@ def download_data(start_date, end_date, instrument, iterable_arr, no_sampling,
             if instrument == 'aia':
                 download_data = Fido.fetch(result, path=f'./{wavelength}' + '/{file}')
             elif instrument == 'hmi':
-                download_data = Fido.fetch(result, path=f'./{physobs}' + '/{file}')
+                download_data = Fido.fetch(result, path=f'./{phy_obs}' + '/{file}')
             print('\n\n\n')
 
 
