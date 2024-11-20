@@ -94,8 +94,11 @@ if __name__=="__main__":
 
     date = convert_date(date)
 
-    start_time = input("enter start time (hh:mm): ")
-    end_time = input("enter end time (hh:mm): ")
+    start_time = input("enter start time (hhmm): ")
+    end_time = input("enter end time (hhmm): ")
+    
+    start_time = start_time[:2] + ':' + start_time[2:]
+    end_time = end_time[:2] + ':' + end_time[2:]
 
     start_date = date + ' ' + start_time
     end_date = date + ' ' + end_time
