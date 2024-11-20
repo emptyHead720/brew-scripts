@@ -20,26 +20,26 @@ def convert_date(date):
     date = tmp[2] + '/' + months[tmp[0]] + '/' + tmp[1]
     return(date)
 
-def download_data(start_date, end_date, instrument, wavelength_arr, no_sampling,
+def download_data(start_date, end_date, instrument, iterable_arr, no_sampling,
                   sampling_time, download):
-    for wavelength in wavelength_arr:
+    for iterable in iterable_arr:
         print("Searching...")
         if not no_sampling:
             if instrument == 'aia':
                 result = Fido.search(a.Time(start_date, end_date), a.Instrument.aia,
                                     a.Sample(sampling_time),
-                                     a.Wavelength(wavelength*u.angstrom), a.Resolution(1))
-            else:
+                                     a.Wavelength(iterable*u.angstrom), a.Resolution(1))
+            elif instrument == 'hmi':
                 result = Fido.search(a.Time(start_date, end_date), a.Instrument.hmi,
                                      a.Sample(sampling_time),
-                                     a.Physobs.los_magnetic_field, a.Resolution(1))
+                                     getattr(a.Physobs, iterable), a.Resolution(1))
         else:
             if instrument == 'aia':
                 result = Fido.search(a.Time(start_date, end_date), a.Instrument.aia,
-                                    a.Wavelength(wavelength*u.angstrom), a.Resolution(1))
-            else:
+                                    a.Wavelength(iterable*u.angstrom), a.Resolution(1))
+            elif instrumnet == 'hmi':
                 result = Fido.search(a.Time(start_date, end_date), a.Instrument.hmi,
-                                    a.Physobs.los_magnetic_field, a.Resolution(1))
+                                    getattr(a.Physobs, iterable), a.Resolution(1))
          
         print(result)
         if not download:
@@ -96,13 +96,24 @@ if __name__=="__main__":
 
     allowed_wavelengths = ['171 (gold)', '193 (bronze)', '304 (red)', '211 (purple)',
                            '131 (teal)', '335 (blue)', '094 (green)', '1600 (yellow/green)',
-                           '1700 (pink)', 'hmi']
+                           '1700 (pink)']
+    
+    hmi_phy_obs = ['hmi los_magnetic_field', 'him los_velocity',
+                                              'hmi intensity']
+    if args.instrument == 'aia':
+        process = sp.Popen(['fzf -m | awk \'{print $1}\''], shell=True, stdout=sp.PIPE,
+                           stdin=sp.PIPE, stderr=sp.STDOUT)    
+        wavelength = process.communicate(input='\n'.join(allowed_wavelengths).encode())[0].decode()
+        wavelength = wavelength.strip().split('\n')
+        wavelength = list(map(int, wavelength))
+        iterable = wavelength
 
-    process = sp.Popen(['fzf -m | awk \'{print $1}\''], shell=True, stdout=sp.PIPE,
-                    stdin=sp.PIPE, stderr=sp.STDOUT)    
-    wavelength = process.communicate(input='\n'.join(allowed_wavelengths).encode())[0].decode()
-    wavelength = wavelength.strip().split('\n')
-    wavelength = list(map(int, wavelength))
+    elif args.instrument == 'hmi':
+        process = sp.Popen(['fzf -m | awk \'{print $2}\''], shell=True, stdout=sp.PIPE,
+                           stdin=sp.PIPE, stderr=sp.STDOUT)    
+        phy_obs = process.communicate(input='\n'.join(hmi_phy_obs).encode())[0].decode()
+        phy_obs = phy_obs.strip().split('\n')
+        iterable = phy_obs
 
     if not args.no_sampling:
         sampling_time = input("Enter sampling time in minutes or 'default': ")
@@ -111,5 +122,5 @@ if __name__=="__main__":
         else:
             sampling_time = int(sampling_time) * u.min
 
-    download_data(start_date, end_date, args.instrument, wavelength, args.no_sampling,
+    download_data(start_date, end_date, args.instrument, iterable, args.no_sampling,
                   sampling_time, args.download)
