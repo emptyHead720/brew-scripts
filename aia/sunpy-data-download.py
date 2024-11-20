@@ -46,12 +46,18 @@ def download_data(start_date, end_date, instrument, iterable_arr, no_sampling,
             download_choice = input("Do you want to download the data (y/n): ")
             if download_choice == 'y':
                 print("downloading")
-                download_data = Fido.fetch(result, path=f'./{wavelength}' + '/{file}')
+                if instrument == 'aia':
+                    download_data = Fido.fetch(result, path=f'./{wavelength}' + '/{file}')
+                elif:
+                    download_data = Fido.fetch(result, path=f'./{physobs}' + '/{file}')
                 print('\n\n\n')
 
         else:
             print("auto downloading")
-            download_data = Fido.fetch(result, path=f'./{wavelength}' + '/{file}')
+            if instrument == 'aia':
+                download_data = Fido.fetch(result, path=f'./{wavelength}' + '/{file}')
+            elif:
+                download_data = Fido.fetch(result, path=f'./{physobs}' + '/{file}')
             print('\n\n\n')
 
 
