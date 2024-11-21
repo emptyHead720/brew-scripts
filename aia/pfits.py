@@ -14,7 +14,23 @@ from glob import glob
 from astropy.visualization import ImageNormalize, SqrtStretch
 import re
 
-if __name__=="__main__":
+
+def plot_aia(map):
+    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                             subplot_kw={'projection':map})
+    map.plot(axes=axes, clip_interval=(1, 99.5)*u.percent)
+    plt.colorbar()
+
+
+def plot_hmi(map):
+    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                             subplot_kw={'projection':map})
+    value = 1500
+    map.plot(axes=axes, norm=plt.Normalize(-value, value), cmap='hmimag')
+    plt.colorbar()
+    
+
+def main():
     parser = argparse.ArgumentParser()
 
     group = parser.add_mutually_exclusive_group()
@@ -38,9 +54,11 @@ if __name__=="__main__":
     if not args.multi_plot:
         file = output.stdout.strip()
         map = sunpy.map.Map(file)
-        fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
-                                       subplot_kw={'projection':map})
-        map.plot(axes=axes, clip_interval=(1, 99.5)*u.percent)#, norm=matplotlib.colors.LogNorm())
+        filename = file.split('/')[-1].lower()
+        if 'aia' in filename:
+            plot_aia(map)
+        elif 'hmi' in filename:
+            plot_hmi(map)
 
     else:
         print("Not setup yet")
@@ -67,3 +85,7 @@ if __name__=="__main__":
     # plt.colorbar() # need to fix how to have global colorbar and not only on the last
 
     plt.show()
+
+
+if __name__=="__main__":
+    main()
