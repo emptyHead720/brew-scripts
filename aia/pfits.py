@@ -15,33 +15,23 @@ from astropy.visualization import ImageNormalize, SqrtStretch
 import re
 
 
-def plot_aia(map):
-    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
-                             subplot_kw={'projection':map})
-    map.plot(axes=axes, clip_interval=(1, 99.5)*u.percent)
-    plt.colorbar()
+class plot_functions:
+    def plot_aia(map):
+        fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                                 subplot_kw={'projection':map})
+        map.plot(axes=axes, clip_interval=(1, 99.5)*u.percent)
+        plt.colorbar()
 
 
-def plot_hmi(map):
-    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
-                             subplot_kw={'projection':map})
-    value = 1500
-    map.plot(axes=axes, norm=plt.Normalize(-value, value), cmap='hmimag')
-    plt.colorbar()
+    def plot_hmi(map):
+        fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                                 subplot_kw={'projection':map})
+        value = 1500
+        map.plot(axes=axes, norm=plt.Normalize(-value, value), cmap='hmimag')
+        plt.colorbar()
     
 
-def main():
-    parser = argparse.ArgumentParser()
-
-    group = parser.add_mutually_exclusive_group()
-
-    parser.add_argument('-p', "--path", nargs='?', default='./*.fits', const='./*.fits',
-                        help="path to file") 
-    parser.add_argument('-m', '--multi_plot', action='store_true')
-    args = parser.parse_args()
-    
-    # files = glob(f"{args.path}")
-     
+def get_file():
     output = sp.run('find . -type f -name "*.fits" |fzf',
                     shell=True, capture_output=True, text=True)
 
@@ -50,35 +40,62 @@ def main():
         # print(output.stderr)
         import sys; sys.exit(0)
 
+    file = output.stdout.strip()
+    return file
+
+
+def get_plot_func(file):
+    filename = file.split('/')[-1].lower()
+    if 'aia' in filename:
+        return "plot_aia"
+    elif 'hmi' in filename:
+        return "plot_hmi"
+        
+
+def main():
+    parser = argparse.ArgumentParser()
+
+    group = parser.add_mutually_exclusive_group()
+
+    # parser.add_argument('-p', "--path", nargs='?', default='./*.fits', const='./*.fits',
+    #                     help="path to file") 
+    parser.add_argument('-p', "--path", nargs = '?', const = "", help="path to file")
+    parser.add_argument('-m', '--multi_plot', action='store_true')
+    args = parser.parse_args()
+    
+    # files = glob(f"{args.path}")
 
     if not args.multi_plot:
-        file = output.stdout.strip()
+        if not args.path:
+            file = get_file()
+        else:
+            file = args.path
         map = sunpy.map.Map(file)
-        filename = file.split('/')[-1].lower()
-        if 'aia' in filename:
-            plot_aia(map)
-        elif 'hmi' in filename:
-            plot_hmi(map)
+        plot_func_name = get_plot_func(file)
+        plot_func = getattr(plot_functions, plot_func_name)
+        print(plot_func)
+        plot_func(map)
 
-    else:
-        print("Not setup yet")
-        import sys; sys.exit(0)
-        
-        process = sp.Popen(['ls .. | fzf -m '], shell=True, stdout=sp.PIPE,
-                            stderr=sp.STDOUT)    
-        wavelengths = process.communicate()[0].decode()
-        wavelengths = wavelengths.strip().split('\n')
-        path = output.stdout.strip().split('/')
-        files = [f"{'/'.join(path[:-2])}/{wavelength}/{re.sub(r'\.[\d]+A',
-                 f'.{wavelength}A', path[-1])}" for wavelength in wavelengths]
+    if not args.path:
+        if args.multi_plot:
+            print("Not setup yet")
+            import sys; sys.exit(0)
+            
+            process = sp.Popen(['ls .. | fzf -m '], shell=True, stdout=sp.PIPE,
+                                stderr=sp.STDOUT)    
+            wavelengths = process.communicate()[0].decode()
+            wavelengths = wavelengths.strip().split('\n')
+            path = output.stdout.strip().split('/')
+            files = [f"{'/'.join(path[:-2])}/{wavelength}/{re.sub(r'\.[\d]+A',
+                     f'.{wavelength}A', path[-1])}" for wavelength in wavelengths]
 
-        maps = sunpy.map.Map(files)
-        fig, axes = plt.subplots(nrows=2, ncols=4, constrained_layout=True,
-                                       subplot_kw={'projection':map,'projection':map })
-        for ax, map in zip(axes.ravel(), maps):
-            map.plot(axes=ax, clip_interval=(1, 99.5)*u.percent) # , norm=matplotlib.colors.LogNorm()
+            maps = sunpy.map.Map(files)
+            fig, axes = plt.subplots(nrows=2, ncols=4, constrained_layout=True,
+                                           subplot_kw={'projection':map,'projection':map })
+            for ax, map in zip(axes.ravel(), maps):
+                map.plot(axes=ax, clip_interval=(1, 99.5)*u.percent)
 
-        plt.axis('off')
+            plt.axis('off')
 
 
     # map.draw_contours([1,5,10,50,90]*u.percent)
