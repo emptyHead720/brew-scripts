@@ -1,4 +1,0 @@
-cp $(find ~/ -type f|fzf -m|tr '\n' ' ') $(fid)
-
-ln -s ~/brew-scripts/done/ ~/bin/scripts/
-
