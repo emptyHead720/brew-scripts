@@ -110,7 +110,6 @@ def main():
         map = sunpy.map.Map(file)
         plot_func_name = get_plot_func(file)
         plot_func = getattr(plot_functions, plot_func_name)
-        print(plot_func)
         plot_func(map)
 
     # if not args.path:
