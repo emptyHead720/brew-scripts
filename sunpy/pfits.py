@@ -1,7 +1,5 @@
 #!/home/snehil/miniforge3/envs/data-work/bin/python
 
-# plots fits files
-
 import subprocess as sp
 import astropy.units as u
 import sunpy.map
@@ -15,6 +13,8 @@ from astropy.visualization import ImageNormalize, SqrtStretch
 import re
 from astropy.visualization import AsymmetricPercentileInterval
 import numpy as np
+from astropy.coordinates import SkyCoord
+import matplotlib as mpl
 
 
 class plot_functions:
@@ -42,11 +42,11 @@ class plot_functions:
 
         fig, axes = plt.subplots(constrained_layout=False,
                                  subplot_kw={'projection':map})
-        im = map.plot(axes=axes, clip_interval=(obj.vmin, obj.vmax)*u.percent)
+        # im = map.plot(axes=axes, clip_interval=(obj.vmin, obj.vmax)*u.percent)
         clip_percentages = ((obj.vmin, obj.vmax)*u.percent).to('%').value
         data = map.data
         vmin, vmax = AsymmetricPercentileInterval(*clip_percentages).get_limits(data)
-        plt.colorbar()
+        # plt.colorbar()
         np.set_printoptions(legacy='1.25')
         text_vmin = plt.figtext(0.1, 0.1, f'{vmin = :.2f}\nvmin%={obj.vmin:.2f}%',
                                 horizontalalignment='center', wrap=True, 
@@ -56,6 +56,25 @@ class plot_functions:
                                 bbox={ 'facecolor': 'grey', 'alpha': 0.5, 'pad': 10})
         key_press = fig.canvas.mpl_connect('key_press_event', lambda event: onkey(event,
                                                                                   data))
+
+        # coords = SkyCoord(Tx=[100,1000,101] * u.arcsec, Ty=[100,1000,101] * u.arcsec,
+        #                   frame=map.coordinate_frame)
+
+        # axes.plot_coord(coords, '.', markersize=5)
+
+        data[data > vmax] = -5000
+        datacopy = map.data.copy()
+        norm = mpl.colors.Normalize(vmin = vmin, vmax=vmax)
+        cmap = plt.get_cmap(map.plot_settings['cmap'])
+        datanorm = norm(data)
+        rgba = cmap(datanorm)
+        rgba[data == -5000] = [1,1,1,1]
+        mymapori = sunpy.map.Map(datacopy , map.meta)
+        mymapmas = sunpy.map.Map(data,map.meta)
+        # im = mymapori.plot(axes = axes, clip_interval=(obj.vmin, obj.vmax)*u.percent)
+        # im2 = mymapmas.plot(axes=axes, clip_interval=(obj.vmin, obj.vmax)*u.percent)
+        im2 = axes.imshow(rgba)
+        fig.colorbar(im2)
         plt.show()
 
 
