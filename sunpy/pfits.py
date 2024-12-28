@@ -1,5 +1,8 @@
 #!/home/snehil/miniforge3/envs/data-work/bin/python
 
+# plots fits files
+
+import numpy.ma as ma
 import subprocess as sp
 import astropy.units as u
 import sunpy.map
@@ -13,13 +16,11 @@ from astropy.visualization import ImageNormalize, SqrtStretch
 import re
 from astropy.visualization import AsymmetricPercentileInterval
 import numpy as np
-from astropy.coordinates import SkyCoord
-import matplotlib as mpl
 
 
 class plot_functions:
     vmin = 1
-    vmax = 99.5
+    vmax = 99.5 
     def plot_aia(map):
         obj = plot_functions()
 
@@ -32,6 +33,7 @@ class plot_functions:
                 obj.vmax -= 0.1
             if event.key == 'ctrl+K':
                 obj.vmax += 0.1
+            # max_point.remove()
             clip_percentages = ((obj.vmin, obj.vmax)*u.percent).to('%').value
             vmin, vmax = AsymmetricPercentileInterval(*clip_percentages).get_limits(data)
             im.set_clim(vmin, vmax)
@@ -56,25 +58,17 @@ class plot_functions:
                                 bbox={ 'facecolor': 'grey', 'alpha': 0.5, 'pad': 10})
         key_press = fig.canvas.mpl_connect('key_press_event', lambda event: onkey(event,
                                                                                   data))
-
-        # coords = SkyCoord(Tx=[100,1000,101] * u.arcsec, Ty=[100,1000,101] * u.arcsec,
-        #                   frame=map.coordinate_frame)
-
-        # axes.plot_coord(coords, '.', markersize=5)
-
-        data[data > vmax] = -5000
-        datacopy = map.data.copy()
-        norm = mpl.colors.Normalize(vmin = vmin, vmax=vmax)
-        cmap = plt.get_cmap(map.plot_settings['cmap'])
-        datanorm = norm(data)
-        rgba = cmap(datanorm)
-        rgba[data == -5000] = [1,1,1,1]
-        mymapori = sunpy.map.Map(datacopy , map.meta)
-        mymapmas = sunpy.map.Map(data,map.meta)
-        # im = mymapori.plot(axes = axes, clip_interval=(obj.vmin, obj.vmax)*u.percent)
-        # im2 = mymapmas.plot(axes=axes, clip_interval=(obj.vmin, obj.vmax)*u.percent)
-        im2 = axes.imshow(rgba)
-        fig.colorbar(im2)
+        mask = ma.masked_greater_equal(data, vmax)
+        scaled_map = sunpy.map.Map(data, map.meta, mask=mask.mask)
+        palette = map.cmap.copy()
+        palette.set_over('black')
+        palette.set_under('red')
+        # im = scaled_map.plot(axes=axes, cmap=palette, vmin=vmin, vmax=vmax)
+        im = map.plot(axes=axes, cmap=palette, clip_interval=(obj.vmin, obj.vmax)*u.percent)
+        pixel_pos = np.argwhere(map.data == map.data.max()) * u.pixel
+        hpc_max = map.wcs.pixel_to_world(pixel_pos[:, 1], pixel_pos[:, 0])
+        max_point = axes.plot_coord(hpc_max, color='blue', marker='x', markersize=15)
+        plt.colorbar()
         plt.show()
 
 

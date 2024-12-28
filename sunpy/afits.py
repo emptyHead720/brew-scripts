@@ -199,7 +199,7 @@ def plot(files, dir_back):
  
 
     # map.draw_contours([1,5,10,50,90]*u.percent)
-    # plt.colorbar() # need to fix how to have global colorbar and not only on the last
+    plt.colorbar() # need to fix how to have global colorbar and not only on the last
 
     # plt.ion()
     plt.show(block=False)
@@ -217,12 +217,16 @@ def sub_select_files(files):
     file2 = sp.run('find . -type f -name "*.fits" |fzf',
                     shell=True, capture_output=True, text=True)
 
-    # file1 = sp.run('readlink -f $(find . -type f -name "*.fits" |fzf)',
-    #                 shell=True, capture_output=True, text=True)
-
-    # file2 = sp.run('readlink -f $(find . -type f -name "*.fits" |fzf)',
-    #                 shell=True, capture_output=True, text=True)
-
+    # trying to also select sub files from daughter directory if needed, workaround is to
+    # use 'wavelength when using fzf for subfiles
+    process1 = sp.Popen(['ls | fzf'], shell=True, stdout=sp.PIPE,
+                    stdin=sp.PIPE, stderr=sp.STDOUT)    
+    wavelength = process.communicate()[0].decode()
+    wavelength = wavelength.strip()
+    process2 = sp.Popen(['ls | fzf'], shell=True, stdout=sp.PIPE,
+                    stdin=sp.PIPE, stderr=sp.STDOUT)    
+    wavelength = process.communicate()[0].decode()
+    wavelength = wavelength.strip()
     # fix the error as readlink is not being used
     if (file1.stderr.split('\n', 1)[0] == 'readlink: missing operand' or
     file2.stderr.split('\n', 1)[0] == 'readlink: missing operand'):
